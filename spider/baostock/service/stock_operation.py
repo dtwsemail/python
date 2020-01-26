@@ -4,19 +4,11 @@ import pandas as pd
 from common import stringUtils
 from spider.baostock.dal import StockBasicInfo
 
+basePath = "/Volumes/Mac/cdt/baostock/file/stockOperateCsv/"
 
 def saveToCsv(data_list, fileName):
     result = pd.DataFrame(data_list)
     result.to_csv(fileName, encoding="gbk", index=False)
-
-
-# def saveToMysql(rs):
-# data_list = []
-# while (rs.error_code == '0') & rs.next():
-#     data_list.append(StockHistoryInfo.StockHistory.convert(rs.get_row_data()))
-
-# dao = StockHistoryInfo.StockHistoryDao();
-# dao.add_more(data_list)
 
 
 
@@ -28,21 +20,22 @@ def download(stockCode, yearList: list, fileName):
     print('login respond  error_msg:' + lg.error_msg)
 
     # 查询季频估值指标盈利能力
-    profit_list = []
+    operation_list = []
 
     for year in yearList:
         for quarter in [1, 2, 3, 4]:
-            rs_profit = bs.query_profit_data(code=stockCode, year=year, quarter=quarter)
-            while (rs_profit.error_code == '0') & rs_profit.next():
-                profit_list.append(rs_profit.get_row_data())
+            rs_operation = bs.query_operation_data(code=stockCode, year=year, quarter=quarter)
+            # rs_operation = bs.query_operation_data(code="sh.600000", year=2017, quarter=2)
+            while (rs_operation.error_code == '0') & rs_operation.next():
+                operation_list.append(rs_operation.get_row_data())
 
-    saveToCsv(profit_list, fileName)
+    saveToCsv(operation_list, fileName)
 
     #### 登出系统 ####
     bs.logout()
 
 
-def getProfitYears(listDate: str):
+def getCalculateYears(listDate: str):
     beginYear = 2006;
     if listDate:
         if len(listDate) > 4:
@@ -61,8 +54,9 @@ def main():
         stockCode = new_obj.ts_code
         listDate = new_obj.list_date
         print('ID:{0}  {1} {2} '.format(new_obj.id, stockCode, new_obj.list_date))
-        download(stringUtils.reverseCode(stockCode), getProfitYears(listDate),
-                 "spider/baostock/file/stockProfiltCsv/" + stockCode + "_q.csv");
+        download(stringUtils.reverseCode(stockCode), getCalculateYears(listDate),
+                 basePath + stockCode + "_o.csv");
+        break;
 
 
 if __name__ == '__main__':
