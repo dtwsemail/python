@@ -4,19 +4,25 @@ import pandas as pd
 from common import stringUtils
 from spider.baostock.dal import StockBasicInfo
 
-# 季频成长能力
-# 返回数据说明
+
+#季频成长能力
+# 入参参数含义：
+#
+# code：股票代码，sh或sz.+6位数字代码，或者指数代码，如：sh.601398。sh：上海；sz：深圳。此参数不可为空；
+# year：统计年份，为空时默认当前年；
+# quarter：统计季度，为空时默认当前季度。不为空时只有4个取值：1，2，3，4。
+
+# 返回参数
 # 参数名称	参数描述	算法说明
 # code	证券代码
 # pubDate	公司发布财报的日期
 # statDate	财报统计的季度的最后一天, 比如2017-03-31, 2017-06-30
-# NRTurnRatio	应收账款周转率(次)	营业收入/[(期初应收票据及应收账款净额+期末应收票据及应收账款净额)/2]
-# NRTurnDays	应收账款周转天数(天)	季报天数/应收账款周转率(一季报：90天，中报：180天，三季报：270天，年报：360天)
-# INVTurnRatio	存货周转率(次)	营业成本/[(期初存货净额+期末存货净额)/2]
-# INVTurnDays	存货周转天数(天)	季报天数/存货周转率(一季报：90天，中报：180天，三季报：270天，年报：360天)
-# CATurnRatio	流动资产周转率(次)	营业总收入/[(期初流动资产+期末流动资产)/2]
-# AssetTurnRatio	总资产周转率	营业总收入/[(期初资产总额+期末资产总额)/2]
-basePath = "/Volumes/Mac/cdt/baostock/file/stockOperateCsv/"
+# YOYEquity	净资产同比增长率	(本期净资产-上年同期净资产)/上年同期净资产的绝对值*100%
+# YOYAsset	总资产同比增长率	(本期总资产-上年同期总资产)/上年同期总资产的绝对值*100%
+# YOYNI	净利润同比增长率	(本期净利润-上年同期净利润)/上年同期净利润的绝对值*100%
+# YOYEPSBasic	基本每股收益同比增长率	(本期基本每股收益-上年同期基本每股收益)/上年同期基本每股收益的绝对值*100%
+# YOYPNI	归属母公司股东净利润同比增长率	(本期归属母公司股东净利润-上年同期归属母公司股东净利润)/上年同期归属母公司股东净利润的绝对值*100%
+basePath = "/Volumes/Mac/cdt/baostock/file/stockGrowthCsv/"
 
 def saveToCsv(data_list, fileName):
     result = pd.DataFrame(data_list)
@@ -36,10 +42,10 @@ def download(stockCode, yearList: list, fileName):
 
     for year in yearList:
         for quarter in [1, 2, 3, 4]:
-            rs_operation = bs.query_operation_data(code=stockCode, year=year, quarter=quarter)
-            # rs_operation = bs.query_operation_data(code="sh.600000", year=2017, quarter=2)
-            while (rs_operation.error_code == '0') & rs_operation.next():
-                operation_list.append(rs_operation.get_row_data())
+            rs_growth = bs.query_growth_data(code=stockCode, year=year, quarter=quarter)
+            # rs_growth = bs.query_growth_data(code="sh.600000", year=2017, quarter=2)
+            while (rs_growth.error_code == '0') & rs_growth.next():
+                operation_list.append(rs_growth.get_row_data())
 
     saveToCsv(operation_list, fileName)
 
@@ -67,7 +73,7 @@ def main():
         listDate = new_obj.list_date
         print('ID:{0}  {1} {2} '.format(new_obj.id, stockCode, new_obj.list_date))
         download(stringUtils.reverseCode(stockCode), getCalculateYears(listDate),
-                 basePath + stockCode + "_o.csv");
+                 basePath + stockCode + "_g.csv");
 
 
 if __name__ == '__main__':
